@@ -6,6 +6,7 @@
 #include "tusb.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "wifi/wifi.h"
 
 #define USB_SYS "USB"
 
@@ -169,6 +170,14 @@ static void usb_task(void *pvParam)
 {
     (void)pvParam;
 
+    uint16_t size = 20;
+    wifi_network wifiList[20] = { 0 };
+    int number = scan_wifi(wifiList, size);
+    for (int i = 0; i < number; i++)
+    {
+        ESP_LOGI("RECEIVED", "%s %d", wifiList[i].ssid, wifiList[i].rssi);
+    }
+
     do
     {
         // TinyUSB device task
@@ -181,6 +190,7 @@ static void usb_task(void *pvParam)
 void app_main(void)
 {
     tinyusb_hw_init();
+    setup_nvs();
 
     bool result = tud_init(BOARD_TUD_RHPORT);
     ESP_LOGI("MAIN", "tud inited %d", result);

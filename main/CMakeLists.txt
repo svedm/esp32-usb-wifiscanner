@@ -1,4 +1,4 @@
-idf_component_register(SRCS "usb_descriptors.c" "main.c"
+idf_component_register(SRCS "usb_descriptors.c" "main.c" "wifi/wifi.c"
                     INCLUDE_DIRS ".")
 
 idf_component_get_property(tusb_lib espressif__tinyusb COMPONENT_LIB)
