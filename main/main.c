@@ -165,13 +165,21 @@ void vendor_task()
 {
     if (tud_vendor_available())
     {
+        const uint8_t command_scan_networks = 0x1;
         uint8_t buf[64];
         uint32_t count = tud_vendor_read(buf, sizeof(buf));
 
         ESP_LOGI(USB_SYS, "VENDOR received: %s", buf);
 
-        tud_vendor_write(buf, count);
-        tud_vendor_write_flush();
+        if (buf[0] == command_scan_networks && count == 1) {
+
+            uint16_t size = 20;
+            wifi_network wifiList[20] = { 0 };
+            int number = scan_wifi(wifiList, size);
+
+            tud_vendor_write(wifiList, sizeof(wifi_network) * number);
+            tud_vendor_write_flush();
+        }
     }
 }
 
