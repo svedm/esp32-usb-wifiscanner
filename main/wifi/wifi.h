@@ -5,5 +5,5 @@ typedef struct {
     int8_t rssi;   
 } wifi_network;
 
-void setup_nvs();
+void setup_wifi();
 int scan_wifi(wifi_network result[], uint16_t max_networks);

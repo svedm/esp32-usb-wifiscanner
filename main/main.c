@@ -80,14 +80,23 @@ void cdc_task(void)
 
             ESP_LOGI(USB_SYS, "CDC data %s", buf);
 
-            // Echo back
-            // Note: Skip echo by commenting out write() and write_flush()
-            // for throughput test e.g
-            //    $ dd if=/dev/zero of=/dev/ttyACM0 count=10000
-
-            tud_cdc_write(buf, count);
-            tud_cdc_write("\r\n", 2);
-            tud_cdc_write_flush();
+            if (buf[0] == '1') {
+                    uint16_t size = 20;
+                    wifi_network wifiList[20] = { 0 };
+                    int number = scan_wifi(wifiList, size);
+                    for (int i = 0; i < number; i++)
+                    {
+                        ESP_LOGI("RECEIVED", "%s %d", wifiList[i].ssid, wifiList[i].rssi);
+                        char* ssid = (char*)wifiList[i].ssid;
+                        tud_cdc_write(ssid, strlen(ssid));
+                        tud_cdc_write("\r\n", 2);
+                    }
+                    tud_cdc_write_flush();
+            } else {
+                tud_cdc_write(buf, count);
+                tud_cdc_write("\r\n", 2);
+                tud_cdc_write_flush();
+            }
         }
     }
 }
@@ -104,7 +113,7 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
     {
         ESP_LOGI(USB_SYS, "terminal connected");
 
-        char hello_str[] = "Hello!\r\n\0";
+        char hello_str[] = "Hello!\r\n Command list:\r\n'1' - Scan WiFi networks\r\n\0";
         tud_cdc_write(hello_str, sizeof(hello_str));
         tud_cdc_write_flush();
     }
@@ -170,14 +179,6 @@ static void usb_task(void *pvParam)
 {
     (void)pvParam;
 
-    uint16_t size = 20;
-    wifi_network wifiList[20] = { 0 };
-    int number = scan_wifi(wifiList, size);
-    for (int i = 0; i < number; i++)
-    {
-        ESP_LOGI("RECEIVED", "%s %d", wifiList[i].ssid, wifiList[i].rssi);
-    }
-
     do
     {
         // TinyUSB device task
@@ -190,7 +191,7 @@ static void usb_task(void *pvParam)
 void app_main(void)
 {
     tinyusb_hw_init();
-    setup_nvs();
+    setup_wifi();
 
     bool result = tud_init(BOARD_TUD_RHPORT);
     ESP_LOGI("MAIN", "tud inited %d", result);

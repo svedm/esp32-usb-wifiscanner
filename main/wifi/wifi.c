@@ -7,7 +7,7 @@
 
 static const char *TAG = "WiFi";
 
-void setup_nvs() 
+void setup_wifi() 
 {
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -15,10 +15,7 @@ void setup_nvs()
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK( ret );
-}
 
-int scan_wifi(wifi_network result[], uint16_t max_networks)
-{
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
@@ -27,13 +24,17 @@ int scan_wifi(wifi_network result[], uint16_t max_networks)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_start());
+}
+
+int scan_wifi(wifi_network result[], uint16_t max_networks)
+{
     uint16_t size = max_networks;
     wifi_ap_record_t ap_info[size];
     uint16_t ap_count = 0;
     memset(ap_info, 0, sizeof(*ap_info));
-
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_start());
+    
     esp_wifi_scan_start(NULL, true);
     ESP_LOGI(TAG, "Max AP number ap_info can hold = %u", size);
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&size, ap_info));
