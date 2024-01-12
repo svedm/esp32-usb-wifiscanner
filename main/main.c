@@ -113,7 +113,7 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
     {
         ESP_LOGI(USB_SYS, "terminal connected");
 
-        char hello_str[] = "Hello!\r\n Command list:\r\n'1' - Scan WiFi networks\r\n\0";
+        char hello_str[] = "Hello!\r\n Command list:\r\n '1' - Scan WiFi networks\r\n\0";
         tud_cdc_write(hello_str, sizeof(hello_str));
         tud_cdc_write_flush();
     }
@@ -169,15 +169,22 @@ void vendor_task()
         uint8_t buf[64];
         uint32_t count = tud_vendor_read(buf, sizeof(buf));
 
-        ESP_LOGI(USB_SYS, "VENDOR received: %s", buf);
+        ESP_LOGI(USB_SYS, "VENDOR received count: %lu", count);
 
-        if (buf[0] == command_scan_networks && count == 1) {
+        for (int i = 0; i < count; i++) {
+            ESP_LOGI(USB_SYS, "%02X", buf[i]);
+        }
+
+        if (buf[0] == command_scan_networks) {
 
             uint16_t size = 20;
             wifi_network wifiList[20] = { 0 };
             int number = scan_wifi(wifiList, size);
 
             tud_vendor_write(wifiList, sizeof(wifi_network) * number);
+
+            uint8_t lastByte = 0b11111111;
+            tud_vendor_write(&lastByte, 1);
             tud_vendor_write_flush();
         }
     }
